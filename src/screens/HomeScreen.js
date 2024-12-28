@@ -1,4 +1,3 @@
-// screens/HomeScreen.js
 import React from 'react';
 import { ScrollView, Text, StyleSheet, View } from 'react-native';
 import TopNavBar from '../components/NavBar';
@@ -7,9 +6,9 @@ import MapViewComponent from '../components/MapView';
 import TasksList from '../components/TasksList';
 import CalendarComponent from '../components/Calendar';
 import FAQComponent from '../components/FAQs';
+import Footer from '../components/Footer';
 
 const HomeScreen = () => {
-
   const tasks = [
     { id: '1', title: 'Feed the animals', status: 'Incomplete' },
     { id: '2', title: 'Check water supply', status: 'Important' },
@@ -48,8 +47,11 @@ const HomeScreen = () => {
 
         {/* FAQ Component */}
         <FAQComponent faqs={faqs} />
-
+        
+        {/* Footer without padding */}
+        <Footer style={styles.footerNoPadding} />
       </View>
+
     </ScrollView>
   );
 };
@@ -66,6 +68,10 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  footerNoPadding: {
+    padding: 0, 
+    marginTop: 0,
   },
 });
 
