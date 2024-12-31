@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScrollView, Text, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import TopNavBar from '../components/NavBar';
 import WeatherWidget from '../components/WeatherWidget';
 import MapViewComponent from '../components/MapView';
@@ -9,6 +10,7 @@ import FAQComponent from '../components/FAQs';
 import Footer from '../components/Footer';
 
 const HomeScreen = () => {
+  const navigation = useNavigation();
   const tasks = [
     { id: '1', title: 'Feed the animals', status: 'Incomplete' },
     { id: '2', title: 'Check water supply', status: 'Important' },
@@ -40,7 +42,7 @@ const HomeScreen = () => {
         />
 
         {/* Tasks List */}
-        <TasksList tasks={tasks} onAddTask={() => { /* Add Task Logic */ }} />
+        <TasksList tasks={tasks} onAddTask={() => navigation.navigate('AddTasks')} />
 
         {/* Calendar Component */}
         <CalendarComponent />
