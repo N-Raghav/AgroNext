@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "react-native-checkbox": "^2.0.0",
+    "react-native-paper": "^5.12.5"
+  }
+}
