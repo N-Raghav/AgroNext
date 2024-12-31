@@ -12,11 +12,10 @@ const TopNavBar = () => {
   const menuItems = [
     { id: '1', title: 'Daily Tasks', subOptions: [
       { label: 'Add Tasks', value: 'AddTasks' },
-      { label: 'Schedule Tasks', value: 'scheduleTasks' },
       { label: 'Manage Tasks', value: 'manageTasks' },
     ]},
     { id: '2', title: 'Livestock Management', subOptions: [
-      { label: 'Manage Animals', value: 'manageAnimals' },
+      { label: 'Manage Animals', value: 'LivestockManagement' },
       { label: 'Manage Groups', value: 'manageGroups' },
     ]},
     { id: '3', title: 'Health Monitoring' },

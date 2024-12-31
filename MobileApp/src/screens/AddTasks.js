@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Keyboard, TouchableWithoutFeedback, Platform, KeyboardAvoidingView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { KeyboardAvoidingView, Platform } from 'react-native';
 import TopNavBar from '../components/NavBar';
 import { TasksContext } from '../components/TasksContext';
 
@@ -64,6 +63,9 @@ const AddTasksPage = ({ navigation }) => {
       isDone: false,
     };
 
+     // Log the filled details to the console
+    console.log('Task Details:', newTask);
+
     addTask(newTask);
 
     setTitle('');
@@ -113,7 +115,7 @@ const AddTasksPage = ({ navigation }) => {
             onChangeText={setDescription}
           />
         </View>
-        
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Associated Animal</Text>
           <TextInput
