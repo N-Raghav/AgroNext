@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Keyboard, TouchableWithoutFeedback, Platform, KeyboardAvoidingView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import TopNavBar from '../components/NavBar';
@@ -83,9 +83,14 @@ const AddTasksPage = ({ navigation }) => {
   };
 
   return (
-
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <SafeAreaView style={styles.container}>
       <TopNavBar />
+      
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.header}>New Task</Text>
 
@@ -93,7 +98,7 @@ const AddTasksPage = ({ navigation }) => {
           <Text style={styles.label}>Title</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: Feed cattle"
+            placeholder="Ex: Feed Cattle"
             value={title}
             onChangeText={setTitle}
           />
@@ -108,7 +113,7 @@ const AddTasksPage = ({ navigation }) => {
             onChangeText={setDescription}
           />
         </View>
-
+        
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Associated Animal</Text>
           <TextInput
@@ -245,6 +250,8 @@ const AddTasksPage = ({ navigation }) => {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
