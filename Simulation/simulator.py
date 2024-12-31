@@ -8,7 +8,7 @@ rabbitmq_host = '127.0.0.1'
 username = 'guest'
 password = 'guest'
 port = 5672
-ssl=False
+ssl = False
 QUEUE_NAME = "COW_MONITORING_DATA"
 
 last_update = {
@@ -31,14 +31,23 @@ update_frequency = {
     "rumen_ph": timedelta(minutes=30)
 }
 
-
 def setup_rabbitmq_channel():
     credentials = pika.PlainCredentials(username, password)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=port, credentials=credentials))
-    channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME)
-    return connection, channel
-
+    parameters = pika.ConnectionParameters(host=rabbitmq_host, port=port, credentials=credentials, heartbeat=60)
+    
+    while True:
+        try:
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            channel.queue_declare(queue=QUEUE_NAME)
+            print("[RabbitMQ] Connection established.")
+            return connection, channel
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"[RabbitMQ] Connection error: {e}. Retrying in 5 seconds...")
+            time.sleep(5)
+        except Exception as e:
+            print(f"[RabbitMQ] Unexpected error: {e}. Retrying in 5 seconds...")
+            time.sleep(5)
 
 def generate_body_temperature():
     return round(random.uniform(36.0, 40.0), 1)
@@ -61,43 +70,52 @@ def generate_feed_intake():
 def generate_rumen_ph():
     return round(random.uniform(5.8, 7.2), 1)
 
-
 def should_update(parameter, current_time):
     return (current_time - last_update[parameter]) >= update_frequency[parameter]
 
 def parameter_worker(slave_id):
-    connection, channel = setup_rabbitmq_channel()
-    try:
-        while True:
-            current_time = datetime.now()
-            for parameter, generator in [
-                ("body_temperature", generate_body_temperature),
-                ("activity_level", generate_activity_level),
-                ("milk_production", generate_milk_production),
-                ("body_condition_score", generate_body_condition_score),
-                ("estrous_cycle", generate_estrous_cycle),
-                ("feed_intake", generate_feed_intake),
-                ("rumen_ph", generate_rumen_ph),
-            ]:
-                if should_update(parameter, current_time):
-                    value = generator()
-                    last_update[parameter] = current_time
-                    data = {
-                        "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S"),
-                        "slave_id": slave_id,
-                        "parameter": parameter,
-                        "value": value
-                    }
-                    message = f"{data['timestamp']},{data['slave_id']},{data['parameter']},{data['value']}"
-                    channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message)
-                    print(f"[{parameter}] Sent to RabbitMQ: {message}")
-            time.sleep(1)  
-    except KeyboardInterrupt:
-        print(f"[Worker] Stopping worker for {slave_id}...")
-    finally:
-        connection.close()
+    while True:
+        try:
+            connection, channel = setup_rabbitmq_channel()
+            while True:
+                current_time = datetime.now()
+                for parameter, generator in [
+                    ("body_temperature", generate_body_temperature),
+                    ("activity_level", generate_activity_level),
+                    ("milk_production", generate_milk_production),
+                    ("body_condition_score", generate_body_condition_score),
+                    ("estrous_cycle", generate_estrous_cycle),
+                    ("feed_intake", generate_feed_intake),
+                    ("rumen_ph", generate_rumen_ph),
+                ]:
+                    if should_update(parameter, current_time):
+                        value = generator()
+                        last_update[parameter] = current_time
+                        data = {
+                            "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S"),
+                            "slave_id": slave_id,
+                            "parameter": parameter,
+                            "value": value
+                        }
+                        message = f"{data['timestamp']},{data['slave_id']},{data['parameter']},{data['value']}"
+                        try:
+                            channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message)
+                            print(f"[{parameter}] Sent to RabbitMQ: {message}")
+                        except pika.exceptions.AMQPConnectionError as e:
+                            print(f"[Worker] Connection error during message publish: {e}. Reconnecting...")
+                            break  
+                time.sleep(1)  
+        except (pika.exceptions.AMQPConnectionError, Exception) as e:
+            print(f"[Worker] Lost connection or error: {e}. Reconnecting...")
+            time.sleep(5)  
+        finally:
+            try:
+                if connection and connection.is_open:
+                    connection.close()
+                    print(f"[Worker] Connection closed for {slave_id}.")
+            except Exception as e:
+                print(f"[Worker] Error closing connection for {slave_id}: {e}")
 
-# Main Function
 def main():
     print("[Simulation] Starting...")
     n_slaves = int(input("Enter the number of slave nodes: "))
