@@ -32,7 +32,7 @@ def setup_rabbitmq_channel():
         host=rabbitmq_host,
         port=port,
         credentials=credentials,
-        heartbeat=60
+        heartbeat=600
     )
 
     while True:
@@ -105,23 +105,19 @@ def parameter_worker(slave_id):
                             "value": value
                         }
                         message = json.dumps(data)
-                        try:
-                            channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message)
-                            logger.info(f"[{parameter}] Sent to RabbitMQ: {message}")
-                        except pika.exceptions.AMQPConnectionError as e:
-                            logger.error(f"[Worker] Connection error during message publish: {e}. Reconnecting...")
-                            break  
+                        channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message)
+                        logger.info(f"Sent to RabbitMQ: {message}")
                 time.sleep(1)  
-        except (pika.exceptions.AMQPConnectionError, Exception) as e:
-            logger.error(f"[Worker] Lost connection or error: {e}. Reconnecting...")
+        except pika.exceptions.AMQPConnectionError as e:
+            logger.error(f"Lost connection or error: {e}. Reconnecting...")
             time.sleep(5) 
         finally:
             try:
                 if connection and connection.is_open:
                     connection.close()
-                    logger.info(f"[Worker] Connection closed for {slave_id}.")
+                    logger.info(f"Connection closed for {slave_id}.")
             except Exception as e:
-                logger.error(f"[Worker] Error closing connection for {slave_id}: {e}")
+                logger.error(f"Error closing connection for {slave_id}: {e}")
 
 def main():
     logger.info("[Simulation] Starting...")
@@ -130,10 +126,8 @@ def main():
             n_slaves = int(input("Enter the number of slave nodes: "))
             if n_slaves > 0:
                 break
-            else:
-                logger.warning("Please enter a positive number.")
         except ValueError:
-            logger.warning("Invalid input. Please enter a valid integer.")
+            pass
 
     processes = []
 
@@ -147,7 +141,6 @@ def main():
         for process in processes:
             process.join()
     except KeyboardInterrupt:
-        logger.info("[Simulation] Terminating...")
         for process in processes:
             process.terminate()
             process.join()
