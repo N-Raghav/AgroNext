@@ -2,24 +2,18 @@ import random
 import time
 import pika
 import multiprocessing
+import json
 from datetime import datetime, timedelta
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
 
 rabbitmq_host = '127.0.0.1'
 username = 'guest'
 password = 'guest'
 port = 5672
-ssl = False
 QUEUE_NAME = "COW_MONITORING_DATA"
-
-last_update = {
-    "body_temperature": datetime.min,
-    "activity_level": datetime.min,
-    "milk_production": datetime.min,
-    "body_condition_score": datetime.min,
-    "estrous_cycle": datetime.min,
-    "feed_intake": datetime.min,
-    "rumen_ph": datetime.min
-}
 
 update_frequency = {
     "body_temperature": timedelta(minutes=15),
@@ -33,20 +27,23 @@ update_frequency = {
 
 def setup_rabbitmq_channel():
     credentials = pika.PlainCredentials(username, password)
-    parameters = pika.ConnectionParameters(host=rabbitmq_host, port=port, credentials=credentials, heartbeat=60)
-    
+
+    parameters = pika.ConnectionParameters(
+        host=rabbitmq_host,
+        port=port,
+        credentials=credentials,
+        heartbeat=60
+    )
+
     while True:
         try:
             connection = pika.BlockingConnection(parameters)
             channel = connection.channel()
             channel.queue_declare(queue=QUEUE_NAME)
-            print("[RabbitMQ] Connection established.")
+            logger.info("RabbitMQ connection established.")
             return connection, channel
         except pika.exceptions.AMQPConnectionError as e:
-            print(f"[RabbitMQ] Connection error: {e}. Retrying in 5 seconds...")
-            time.sleep(5)
-        except Exception as e:
-            print(f"[RabbitMQ] Unexpected error: {e}. Retrying in 5 seconds...")
+            logger.error(f"RabbitMQ connection error: {e}. Retrying in 5 seconds...")
             time.sleep(5)
 
 def generate_body_temperature():
@@ -70,10 +67,20 @@ def generate_feed_intake():
 def generate_rumen_ph():
     return round(random.uniform(5.8, 7.2), 1)
 
-def should_update(parameter, current_time):
+def should_update(parameter, current_time, last_update, update_frequency):
     return (current_time - last_update[parameter]) >= update_frequency[parameter]
 
 def parameter_worker(slave_id):
+    local_last_update = {  
+        "body_temperature": datetime.min,
+        "activity_level": datetime.min,
+        "milk_production": datetime.min,
+        "body_condition_score": datetime.min,
+        "estrous_cycle": datetime.min,
+        "feed_intake": datetime.min,
+        "rumen_ph": datetime.min
+    }
+
     while True:
         try:
             connection, channel = setup_rabbitmq_channel()
@@ -88,37 +95,46 @@ def parameter_worker(slave_id):
                     ("feed_intake", generate_feed_intake),
                     ("rumen_ph", generate_rumen_ph),
                 ]:
-                    if should_update(parameter, current_time):
+                    if should_update(parameter, current_time, local_last_update, update_frequency):
                         value = generator()
-                        last_update[parameter] = current_time
+                        local_last_update[parameter] = current_time
                         data = {
                             "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S"),
                             "slave_id": slave_id,
                             "parameter": parameter,
                             "value": value
                         }
-                        message = f"{data['timestamp']},{data['slave_id']},{data['parameter']},{data['value']}"
+                        message = json.dumps(data)
                         try:
                             channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message)
-                            print(f"[{parameter}] Sent to RabbitMQ: {message}")
+                            logger.info(f"[{parameter}] Sent to RabbitMQ: {message}")
                         except pika.exceptions.AMQPConnectionError as e:
-                            print(f"[Worker] Connection error during message publish: {e}. Reconnecting...")
+                            logger.error(f"[Worker] Connection error during message publish: {e}. Reconnecting...")
                             break  
                 time.sleep(1)  
         except (pika.exceptions.AMQPConnectionError, Exception) as e:
-            print(f"[Worker] Lost connection or error: {e}. Reconnecting...")
-            time.sleep(5)  
+            logger.error(f"[Worker] Lost connection or error: {e}. Reconnecting...")
+            time.sleep(5) 
         finally:
             try:
                 if connection and connection.is_open:
                     connection.close()
-                    print(f"[Worker] Connection closed for {slave_id}.")
+                    logger.info(f"[Worker] Connection closed for {slave_id}.")
             except Exception as e:
-                print(f"[Worker] Error closing connection for {slave_id}: {e}")
+                logger.error(f"[Worker] Error closing connection for {slave_id}: {e}")
 
 def main():
-    print("[Simulation] Starting...")
-    n_slaves = int(input("Enter the number of slave nodes: "))
+    logger.info("[Simulation] Starting...")
+    while True:
+        try:
+            n_slaves = int(input("Enter the number of slave nodes: "))
+            if n_slaves > 0:
+                break
+            else:
+                logger.warning("Please enter a positive number.")
+        except ValueError:
+            logger.warning("Invalid input. Please enter a valid integer.")
+
     processes = []
 
     for i in range(n_slaves):
@@ -131,10 +147,11 @@ def main():
         for process in processes:
             process.join()
     except KeyboardInterrupt:
-        print("[Simulation] Terminating...")
+        logger.info("[Simulation] Terminating...")
         for process in processes:
             process.terminate()
-    print("[Simulation] Stopped.")
+            process.join()
+    logger.info("[Simulation] Stopped.")
 
 if __name__ == "__main__":
     main()

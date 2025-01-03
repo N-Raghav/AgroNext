@@ -21,7 +21,13 @@ def setup_mongodb_client():
 
 def setup_rabbitmq_connection():
     credentials = pika.PlainCredentials(username, password)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=port, credentials=credentials))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=rabbitmq_host,
+            port=port,
+            credentials=credentials
+        )
+    )
     channel = connection.channel()
     channel.queue_declare(queue=QUEUE_NAME)
     return connection, channel
@@ -29,21 +35,20 @@ def setup_rabbitmq_connection():
 def rabbitmq_callback(ch, method, properties, body):
     try:
         collection = setup_mongodb_client()
-        message = body.decode('utf-8')
-        timestamp, slave_id, parameter, value = message.split(',')
-        
-        document = {
-            "timestamp": datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S"),
-            "slave_id": slave_id,
-            "parameter": parameter,
-            "value": float(value) if parameter in ["body_temperature", "milk_production", "body_condition_score", "feed_intake", "rumen_ph"] else int(value)
-        }
-        
+        message = json.loads(body.decode('utf-8'))
     
+        timestamp = datetime.strptime(message["timestamp"], "%Y-%m-%d %H:%M:%S")
+        document = {
+            "timestamp": timestamp,
+            "slave_id": message.get("slave_id"),
+            "parameter": message.get("parameter"),
+            "value": float(message["value"])
+        }
         collection.insert_one(document)
         print(f"[MongoDB] Inserted document: {document}")
     except Exception as e:
         print(f"[Error] Failed to process message: {e}")
+
 
 def start_consumer():
     connection, channel = setup_rabbitmq_connection()
