@@ -22,7 +22,8 @@ update_frequency = {
     "body_condition_score": timedelta(days=7),
     "estrous_cycle": timedelta(days=1),
     "feed_intake": timedelta(hours=1),
-    "rumen_ph": timedelta(minutes=30)
+    "rumen_ph": timedelta(minutes=30),
+
 }
 
 def setup_rabbitmq_channel():
@@ -32,7 +33,7 @@ def setup_rabbitmq_channel():
         host=rabbitmq_host,
         port=port,
         credentials=credentials,
-        heartbeat=600
+        heartbeat=60
     )
 
     while True:
