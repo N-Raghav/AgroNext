@@ -33,7 +33,7 @@ def setup_rabbitmq_channel():
         host=rabbitmq_host,
         port=port,
         credentials=credentials,
-        heartbeat=60
+        heartbeat=700
     )
 
     while True:
