@@ -34,4 +34,6 @@ df = pd.DataFrame(columns=columns)
 for i in cow_data_dict:
     new_record = create_record_from_data(cow_data_dict[i])
     new_record['slave_id'] = i
-    df = pd.concat([df, new_record], ignore_index=True)
+    latest_record = new_record.loc[new_record['timestamp'].idxmax()]
+    df = pd.concat([df, pd.DataFrame([latest_record])], ignore_index=True)
+print(df)
