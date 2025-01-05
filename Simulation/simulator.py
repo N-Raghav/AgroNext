@@ -20,7 +20,6 @@ update_frequency = {
     "activity_level": timedelta(minutes=10),
     "milk_production": timedelta(hours=12),
     "body_condition_score": timedelta(days=7),
-    "estrous_cycle": timedelta(days=1),
     "feed_intake": timedelta(hours=1),
     "rumen_ph": timedelta(minutes=30),
 
