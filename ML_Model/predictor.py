@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import random
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -13,12 +14,12 @@ data_size = 1000
 np.random.seed(42)
 previous_estrus_date = 21  # Initial default value for all data
 data = {
-    'Body Temperature': np.random.normal(38.5, 0.5, data_size),
-    'Activity Level': np.random.normal(50, 10, data_size),
-    'Rumen pH': np.random.normal(6.5, 0.2, data_size),
-    'Milk Production': np.random.normal(20, 5, data_size),
-    'Feed Intake': np.random.normal(25, 2, data_size),
-    'Body Condition Score': np.random.normal(3.5, 0.5, data_size),
+    'Body Temperature': [round(random.uniform(36.0, 40.0), 1) for _ in range(data_size)],
+    'Activity Level': [random.randint(5000, 15000) for _ in range(data_size)],
+    'Rumen pH': [round(random.uniform(5.8, 7.2), 1) for _ in range(data_size)],
+    'Milk Production': [round(random.uniform(20.0, 50.0), 1) for _ in range(data_size)],
+    'Feed Intake': [round(random.uniform(10.0, 30.0), 1) for _ in range(data_size)],
+    'Body Condition Score': [round(random.uniform(2.5, 4.5), 1) for _ in range(data_size)],
     'Previous Estrus Heat Date': np.full(data_size, previous_estrus_date),
     'Estrus Heat Date': np.random.uniform(19, 23, data_size)  # Target variable
 }

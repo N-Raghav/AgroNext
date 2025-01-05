@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from pymongo import MongoClient
+import requests
 from datetime import datetime
 
 # Define the Blueprint for the 'cycle' API
@@ -51,6 +52,8 @@ def create_or_update_cycle():
         cycle_data,  # New data
         upsert=True  # If not found, insert a new record
     )
+
+    response = requests.get(f'http://127.0.0.1:5000/predict_estrus/{name}')
 
     if result.matched_count > 0:
         return jsonify({

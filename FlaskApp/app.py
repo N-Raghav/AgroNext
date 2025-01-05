@@ -4,6 +4,12 @@ import os
 from dotenv import load_dotenv
 import api
 
+import pandas as pd
+import numpy as np
+from datetime import datetime
+import pickle
+from tensorflow.keras.models import load_model
+
 load_dotenv()  # Load environment variables from .env
 
 app = Flask(__name__)
@@ -17,6 +23,7 @@ task_collection = db['tasks']
 animal_collection = db['animals']
 cow_collection = db['CowData']
 cycle_collection = db['cycle_data']
+predicted_collection = db['predicted_cycle']
 
 # Register the Blueprint
 app.register_blueprint(api.task_bp)
@@ -29,6 +36,93 @@ api.init_task_collection(task_collection)
 api.init_animal_collection(animal_collection)
 api.init_cow_data_collection(cow_collection)
 api.init_cycle_collection(cycle_collection)
+
+# Initialize model and scaler files
+model = load_model('estrus_heat_prediction_model.h5')
+with open('scaler.pkl', 'rb') as scaler_file:
+    loaded_scaler = pickle.load(scaler_file)
+
+# Function for preprocessing cow data
+def preprocess_cow_data(cow_id):
+    cow_data = pd.DataFrame(list(cow_collection.find()))
+    cow_data_dict = {cow_id: cow_data[cow_data['slave_id'] == cow_id] for cow_id in cow_data['slave_id'].unique()}
+
+    def create_record_from_data(cow_data):
+        grouped = cow_data.groupby('timestamp')
+        records = []
+
+        for timestamp, group in grouped:
+            record = {'timestamp': timestamp}
+            for _, row in group.iterrows():
+                record[row['parameter']] = row['value']
+            records.append(record)
+        
+        return pd.DataFrame(records).ffill()
+
+    df = pd.DataFrame(columns=['timestamp', 'slave_id', 'body_temperature', 'activity_level', 'milk_production', 'body_condition_score', 'feed_intake', 'rumen_ph'])
+    
+    # Preprocess data for the specific cow
+    for i in cow_data_dict:
+        new_record = create_record_from_data(cow_data_dict[i])
+        new_record['slave_id'] = i
+        latest_record = new_record.loc[new_record['timestamp'].idxmax()]
+        df = pd.concat([df, pd.DataFrame([latest_record])], ignore_index=True)
+
+    return df
+
+# Function to get previous estrous day from the cycle_data collection
+def get_previous_estrous_day(cow_id):
+    cycle_data = cycle_collection.find_one({"name": cow_id})
+    if cycle_data and "cycle_length" in cycle_data:
+        return cycle_data["cycle_length"]
+    return 21  # Default value if not found
+
+# Function to predict estrous cycle day
+def predict_estrus_heat(input_data):
+    """Predict estrus heat date given input features."""
+    # Ensure input_data is a 2D array for prediction
+    input_data = np.array(input_data).reshape(1, -1)
+    scaled_data = loaded_scaler.transform(input_data)  # Scale the data using the loaded scaler
+    prediction = model.predict(scaled_data)
+    return prediction.flatten()[0]
+
+# API to predict estrous cycle days for a specific cow
+@app.route('/predict_estrus/<cow_id>', methods=['GET'])
+def predict_estrus_cycle(cow_id):
+    # Step 1: Preprocess data for the cow
+    df = preprocess_cow_data(cow_id)
+
+    # Step 2: Extract input data (body temperature, activity level, rumen ph, etc.)
+    input_features = df[['body_temperature', 'activity_level', 'rumen_ph', 'milk_production', 'feed_intake', 'body_condition_score']].iloc[0].values
+
+    # Get previous estrous cycle day (can be set here as an input parameter if provided, assuming it’s part of the request body)
+    previous_estrus_day = get_previous_estrous_day(cow_id)
+
+    # Add the previous estrous day as the last input
+    input_data = np.append(input_features, previous_estrus_day)
+
+    # Step 3: Make prediction
+    predicted_cycle_day = float(predict_estrus_heat(input_data))
+
+    # Create a record to store in the "predicted_cycle" collection
+    predicted_cycle_record = {
+        "cow_id": cow_id,
+        "predicted_estrous_cycle_day": predicted_cycle_day,
+        "timestamp": datetime.now(),  # Timestamp of the prediction
+    }
+
+    # Insert the predicted cycle into the "predicted_cycle" collection
+    predicted_collection.replace_one(
+        {"cow_id": cow_id},  # Match by cow_id to ensure one record per cow
+        predicted_cycle_record,
+        upsert=True  # If record with cow_id exists, update it; else, insert new
+    )
+
+    # Return the predicted estrous cycle day as response
+    return jsonify({
+        "cow_id": cow_id,
+        "predicted_estrous_cycle_day": predicted_cycle_day
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
