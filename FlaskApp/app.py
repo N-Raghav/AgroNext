@@ -22,11 +22,13 @@ cycle_collection = db['cycle_data']
 app.register_blueprint(api.task_bp)
 app.register_blueprint(api.animal_bp)
 app.register_blueprint(api.cow_data_bp)
+app.register_blueprint(api.cycle_bp)
 
 # Setip collection for API
 api.init_task_collection(task_collection)
 api.init_animal_collection(animal_collection)
 api.init_cow_data_collection(cow_collection)
+api.init_cycle_collection(cycle_collection)
 
 if __name__ == '__main__':
     app.run(debug=True)
