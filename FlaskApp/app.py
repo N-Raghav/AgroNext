@@ -124,5 +124,18 @@ def predict_estrus_cycle(cow_id):
         "predicted_estrous_cycle_day": predicted_cycle_day
     }), 200
 
+@app.route('/predicted/<cow_id>', methods=['GET'])
+def get_cow_by_id(cow_id):
+    # Find the cow from the collection using the cow_id
+    cow = predicted_collection.find_one({'cow_id': cow_id})
+    
+    if cow:
+        # Remove '_id' field for better response format
+        cow['_id'] = str(cow['_id'])
+        return jsonify(cow), 200  # Return cow data with status 200 (OK)
+    else:
+        return jsonify({'error': 'Cow not found'}), 404  # Return error if not found
+
+
 if __name__ == '__main__':
     app.run(debug=True)
