@@ -6,7 +6,7 @@ import api
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import pickle
 from tensorflow.keras.models import load_model
 
@@ -136,6 +136,46 @@ def get_cow_by_id(cow_id):
     else:
         return jsonify({'error': 'Cow not found'}), 404  # Return error if not found
 
+DANGEROUSLY_LOW_THRESHOLDS = {
+    "body_temperature": 36.5,
+    "activity_level": 1000,
+    "milk_production": 5.0,
+    "body_condition_score": 1.5,
+    "estrous_cycle": 10.0,
+    "feed_intake": 10.0,
+    "rumen_ph": 5.5
+}
+
+@app.route('/alert', methods=['GET'])
+def alert():
+    try:
+        # Get the current time and time 30 minutes ago
+        now = datetime.utcnow()
+        thirty_minutes_ago = now - timedelta(minutes=30)
+
+        # Query data from MongoDB for the last 30 minutes
+        query = {"timestamp": {"$gte": thirty_minutes_ago}}
+        data = list(cow_collection.find(query))
+
+        alerts = []
+        for record in data:
+            parameter = record['parameter']
+            value = record['value']
+            slave_id = record['slave_id']
+
+            # Check if the value is dangerously low
+            if parameter in DANGEROUSLY_LOW_THRESHOLDS:
+                if value < DANGEROUSLY_LOW_THRESHOLDS[parameter]:
+                    alerts.append({"slave_id": slave_id, "parameter": parameter})
+
+        # Return response based on alerts
+        if alerts:
+            return jsonify({"status": "alert", "alerts": alerts}), 200
+        else:
+            return jsonify({"status": "ok", "message": "No dangerously low parameters detected"}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
