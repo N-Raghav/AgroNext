@@ -20,9 +20,9 @@ update_frequency = {
     "activity_level": timedelta(minutes=10),
     "milk_production": timedelta(hours=12),
     "body_condition_score": timedelta(days=7),
-    "estrous_cycle": timedelta(days=1),
     "feed_intake": timedelta(hours=1),
-    "rumen_ph": timedelta(minutes=30)
+    "rumen_ph": timedelta(minutes=30),
+
 }
 
 def setup_rabbitmq_channel():
@@ -32,7 +32,7 @@ def setup_rabbitmq_channel():
         host=rabbitmq_host,
         port=port,
         credentials=credentials,
-        heartbeat=600
+        heartbeat=700
     )
 
     while True:
@@ -58,9 +58,6 @@ def generate_milk_production():
 def generate_body_condition_score():
     return round(random.uniform(2.5, 4.5), 1)
 
-def generate_estrous_cycle():
-    return random.randint(18, 25)
-
 def generate_feed_intake():
     return round(random.uniform(10.0, 30.0), 1)
 
@@ -76,7 +73,6 @@ def parameter_worker(slave_id):
         "activity_level": datetime.min,
         "milk_production": datetime.min,
         "body_condition_score": datetime.min,
-        "estrous_cycle": datetime.min,
         "feed_intake": datetime.min,
         "rumen_ph": datetime.min
     }
@@ -91,7 +87,6 @@ def parameter_worker(slave_id):
                     ("activity_level", generate_activity_level),
                     ("milk_production", generate_milk_production),
                     ("body_condition_score", generate_body_condition_score),
-                    ("estrous_cycle", generate_estrous_cycle),
                     ("feed_intake", generate_feed_intake),
                     ("rumen_ph", generate_rumen_ph),
                 ]:

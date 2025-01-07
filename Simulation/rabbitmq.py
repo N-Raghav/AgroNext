@@ -10,7 +10,7 @@ port = 5672
 QUEUE_NAME = "COW_MONITORING_DATA"
 
 mongodb_uri = "mongodb+srv://username:Agronext4@agronext.6tt8c.mongodb.net/?retryWrites=true&w=majority&appName=AgroNext"
-db_name = "CowMonitoring"
+db_name = "cow_monitoring"
 collection_name = "CowData"
 
 def setup_mongodb_client():
