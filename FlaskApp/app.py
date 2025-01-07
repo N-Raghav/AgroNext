@@ -92,10 +92,10 @@ def predict_estrus_cycle(cow_id):
     # Step 1: Preprocess data for the cow
     df = preprocess_cow_data(cow_id)
 
-    # Step 2: Extract input data (body temperature, activity level, rumen ph, etc.)
+    # Step 2: Extract input data (body temperature, activity level, rumen pH, etc.)
     input_features = df[['body_temperature', 'activity_level', 'rumen_ph', 'milk_production', 'feed_intake', 'body_condition_score']].iloc[0].values
 
-    # Get previous estrous cycle day (can be set here as an input parameter if provided, assuming it’s part of the request body)
+    # Get previous estrous cycle day (assuming part of the cow data)
     previous_estrus_day = get_previous_estrous_day(cow_id)
 
     # Add the previous estrous day as the last input
@@ -104,25 +104,38 @@ def predict_estrus_cycle(cow_id):
     # Step 3: Make prediction
     predicted_cycle_day = float(predict_estrus_heat(input_data))
 
+    # Fetch the latest estrous_end_date from the cycle_data collection
+    cycle_data = cycle_collection.find_one({"name": cow_id}, sort=[("estrous_end_date", -1)])
+    if not cycle_data or "estrous_end_date" not in cycle_data:
+        return jsonify({"error": "estrous_end_date not found for the cow"}), 400
+
+    estrous_end_date = cycle_data["estrous_end_date"]  # Already a datetime object if stored as such in MongoDB
+
+    # Calculate the predicted_date by adding the predicted_cycle_day (converted to timedelta)
+    predicted_date = estrous_end_date + timedelta(days=int(predicted_cycle_day))
+
     # Create a record to store in the "predicted_cycle" collection
     predicted_cycle_record = {
         "cow_id": cow_id,
         "predicted_estrous_cycle_day": predicted_cycle_day,
+        "predicted_date": predicted_date,
         "timestamp": datetime.now(),  # Timestamp of the prediction
     }
 
-    # Insert the predicted cycle into the "predicted_cycle" collection
+    # Insert or update the predicted cycle in the "predicted_cycle" collection
     predicted_collection.replace_one(
         {"cow_id": cow_id},  # Match by cow_id to ensure one record per cow
         predicted_cycle_record,
         upsert=True  # If record with cow_id exists, update it; else, insert new
     )
 
-    # Return the predicted estrous cycle day as response
+    # Return the predicted estrous cycle day and predicted date as response
     return jsonify({
         "cow_id": cow_id,
-        "predicted_estrous_cycle_day": predicted_cycle_day
+        "predicted_estrous_cycle_day": predicted_cycle_day,
+        "predicted_date": predicted_date.isoformat()  # Return in ISO format
     }), 200
+
 
 @app.route('/predicted/<cow_id>', methods=['GET'])
 def get_cow_by_id(cow_id):
