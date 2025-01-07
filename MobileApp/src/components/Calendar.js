@@ -45,31 +45,31 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20, // Added space between buttons and calendar
+    marginBottom: 20, 
   },
   button: {
     backgroundColor: '#097969',
-    paddingVertical: 6,  // Reduced padding
-    paddingHorizontal: 12,  // Reduced padding
+    paddingVertical: 6,  
+    paddingHorizontal: 12,  
     borderRadius: 5,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    minWidth: 80,  // Reduced minimum width
+    minWidth: 80,  
   },
   buttonText: {
     color: '#fff',
-    fontSize: 14,  // Reduced font size
+    fontSize: 14,  
     fontWeight: 'bold',
   },
   icon: {
-    marginLeft: 6, // Reduced space between text and icon
+    marginLeft: 6, 
   },
   calendar: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    padding: 10, // Added padding inside the calendar
+    padding: 10, 
   },
 });
 

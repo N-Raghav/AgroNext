@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import logo from '../../assets/logo120.png';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const WelcomeScreen = ({ navigation }) => {
   const [farmDetails, setFarmDetails] = useState({
@@ -20,151 +31,195 @@ const WelcomeScreen = ({ navigation }) => {
     navigation.navigate('Home', { farmDetails });
   };
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Welcome To AgroNext!</Text>
-      <Image source={logo} style={styles.image} />
-
-      <Text style={styles.subtitle}>Let’s get started! Please provide your farm details.</Text>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Your Farm Name</Text>
+  const renderInput = (label, field, placeholder, icon) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputWrapper}>
+        <Icon name={icon} size={20} color="#097969" style={styles.inputIcon} />
         <TextInput
           style={styles.input}
-          placeholder="Enter your farm name"
-          value={farmDetails.farmName}
-          onChangeText={(text) => handleInputChange('farmName', text)}
+          placeholder={placeholder}
+          value={farmDetails[field]}
+          onChangeText={(text) => handleInputChange(field, text)}
+          placeholderTextColor="#999"
         />
       </View>
+    </View>
+  );
 
-      <Text style={styles.sectionTitle}>Where is your farm located?</Text>
-      <View style={styles.locationRow}>
-        <TextInput
-          style={styles.halfInput}
-          placeholder="Country"
-          value={farmDetails.country}
-          onChangeText={(text) => handleInputChange('country', text)}
-        />
-        <TextInput
-          style={styles.halfInput}
-          placeholder="City"
-          value={farmDetails.city}
-          onChangeText={(text) => handleInputChange('city', text)}
-        />
-      </View>
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <Image source={require('../../assets/logo120.png')} style={styles.logo} />
+            <Text style={styles.title}>Welcome to AgroNext!</Text>
+            <Text style={styles.subtitle}>Let's get started with your farm details.</Text>
+          </View>
 
-      {[
-        { label: 'Address', field: 'address' },
-        { label: 'State', field: 'state' },
-        { label: 'Pincode', field: 'pincode' },
-      ].map((item, index) => (
-        <View key={index} style={styles.inputGroup}>
-          <Text style={styles.label}>{item.label}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={item.label}
-            value={farmDetails[item.field]}
-            onChangeText={(text) => handleInputChange(item.field, text)}
-          />
-        </View>
-      ))}
+          <View style={styles.card}>
+            {renderInput('Farm Name', 'farmName', 'Enter your farm name', 'leaf-outline')}
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Add Livestock functionality here')}>
-          <Text style={styles.buttonText}>Add Livestock</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={goToNext}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            <Text style={styles.sectionTitle}>Where is your farm located?</Text>
+            <View style={styles.locationRow}>
+              <View style={styles.halfWidth}>
+                {renderInput('Country', 'country', 'Country', 'flag-outline')}
+              </View>
+              <View style={styles.halfWidth}>
+                {renderInput('City', 'city', 'City', 'business-outline')}
+              </View>
+            </View>
+
+            {renderInput('Address', 'address', 'Enter your address', 'home-outline')}
+            {renderInput('State', 'state', 'Enter your state', 'map-outline')}
+            {renderInput('Pincode', 'pincode', 'Enter your pincode', 'mail-outline')}
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.button, styles.secondaryButton]}
+              onPress={() => alert('Add Livestock functionality here')}
+            >
+              <Icon name="add-circle-outline" size={20} color="#097969" style={styles.buttonIcon} />
+              <Text style={[styles.buttonText, styles.secondaryButtonText]}>Add Livestock</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={goToNext}>
+              <Text style={styles.buttonText}>Next</Text>
+              <Icon name="arrow-forward-outline" size={20} color="#fff" style={styles.buttonIcon} />
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f0f4f8',
+  },
   container: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: '#fff',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
+    marginBottom: 0,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: '#097969',
     marginBottom: 10,
     textAlign: 'center',
-    color: '#2c3e50',
-  },
-  image: {
-    resizeMode: 'contain',
-    width: 150,
-    alignSelf: 'center',
-    marginBottom: 15,
   },
   subtitle: {
     fontSize: 16,
-    color: '#555',
-    marginBottom: 20,
+    color: '#666',
     textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 15,
-    marginTop: 4,
-    color: '#34495e',
+    marginTop: 10,
+    color: '#097969',
   },
   inputGroup: {
     marginBottom: 15,
   },
   label: {
-    fontSize: 16,
-    fontWeight:'400',
-    color: '#333',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
     marginBottom: 5,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  inputIcon: {
     padding: 10,
-    backgroundColor: '#f5f5f5',
-    fontSize: 15,
-    height: 45,
+  },
+  input: {
+    flex: 1,
+    paddingHorizontal: 10, // Added for consistent spacing
+    paddingVertical: Platform.OS === 'android' ? 8 : 12, // Adjusted for Android
+    fontSize: 16,
+    color: '#333',
+  },
+  halfWidth: {
+    flex: 1,
+    marginHorizontal: 5,
   },
   locationRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 15,
   },
-  halfInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-    fontSize: 15,
-    height: 45,
-    marginHorizontal: 3,
-  },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     marginTop: 20,
   },
   button: {
-    backgroundColor: '#097969',
-    borderRadius: 25,
-    height: 50,
-    width: 140,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#097969',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     elevation: 2,
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  secondaryButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#097969',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  secondaryButtonText: {
+    color: '#097969',
+  },
+  buttonIcon: {
+    marginLeft: 5,
   },
 });
 

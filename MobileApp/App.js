@@ -9,6 +9,10 @@ import AddTasksPage from './src/screens/AddTasks.js';
 import AddAnimal from './src/screens/AddAnimals.js';
 import AddGroups from './src/screens/AddGroups.js';
 import LivestockManagement from './src/screens/LivestockManagement.js';
+import ManageInsemination from './src/screens/InseminationSchedule.js';
+import UpdateCycle from './src/screens/UpdateCycle.js';
+import HealthMonitoring from './src/screens/HealthMonitoring.js';
+import History from './src/screens/History.js';
 import { TasksProvider } from './src/components/TasksContext.js';
 
 const Stack = createStackNavigator();
@@ -25,6 +29,10 @@ const App = () => {
         <Stack.Screen name="LivestockManagement" component={LivestockManagement} options={{ headerShown: false }} />
         <Stack.Screen name="AddAnimals" component={AddAnimal} options={{ headerShown: false }} />
         <Stack.Screen name="AddGroups" component={AddGroups} options={{ headerShown: false }} />
+        <Stack.Screen name="ManageInsemination" component={ManageInsemination} options={{ headerShown: false }} />
+        <Stack.Screen name="updateCycle" component={UpdateCycle} options={{ headerShown: false }} />
+        <Stack.Screen name="history" component={History} options={{ headerShown: false }} />
+        <Stack.Screen name="HealthMonitoring" component={HealthMonitoring} options={{ headerShown: false }} />
         </Stack.Navigator>
     </NavigationContainer>
     </TasksProvider>
