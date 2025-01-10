@@ -8,8 +8,7 @@ AgroNext is a livestock health management platform designed to improve the effic
 - [Overview](#overview)
 - [Features](#features)
 - [System Architecture](#system-architecture)
-- [Getting Started](#getting-started)
-- [Figma Designs](#figma-designs)
+- [App Design](#app-design)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -30,7 +29,7 @@ By utilizing modern technologies like IoT sensors, RabbitMQ, and machine learnin
 
 ### 1. Health Monitoring
 - Tracks physical and behavioral health metrics.
-- Visual health monitoring charts.
+- Provides visual health monitoring charts.
 
 ### 2. Livestock Management
 - Manage animals, groups, and tasks through a streamlined interface.
@@ -49,7 +48,7 @@ By utilizing modern technologies like IoT sensors, RabbitMQ, and machine learnin
 
 The following diagram outlines the system architecture of AgroNext:
 
-![System Architecture](AgroNext.drawio.png)
+![System Architecture](Images/AgroNext.drawio.png)
 
 ### Key Components
 - **Health Tracking**: Tracks livestock health and provides visual insights.
@@ -58,19 +57,71 @@ The following diagram outlines the system architecture of AgroNext:
 - **Machine Learning Model**: Predicts estrous cycles for accurate insemination scheduling.
 - **CowData**: Stores and processes livestock data for health and cycle tracking.
 
---
+---
 
-## Figma Designs
+## App Design
 
-The user interface and experience for AgroNext are designed using Figma. Here are a few highlights:
+The user interface and experience for AgroNext are designed using Figma. Below are the key screens:
 
-- **Login Screen**:
-  ![Login Screen](assets/login_screen.png)
+### Login Flow
 
-- **Dashboard**:
-  ![Dashboard](assets/dashboard.png)
+#### Splash Screen
+![Splash Screen](Images/Spash_screen.png)
 
-For detailed designs, refer to the [Figma Link](#) (insert link here).
+#### Language Selection
+![Language Selection](Images/Language_Selection.png)
+
+#### Login Screen
+![Login Screen](Images/Log_In.png)
+
+#### Register with Email
+![Register with Email](Images/Register_With_Email.png)
+
+#### Intro Screen
+![Intro Screen](Images/Intro_Screen.png)
+
+### Dashboard
+
+#### Home Screen
+![Dashboard](Images/Home_Screen.png)
+
+### Health Monitoring
+
+#### Cow Health Monitoring
+![Cow Health Monitoring](Images/Health_Monitor_Cow.png)
+
+#### Bull Health Monitoring
+![Bull Health Monitoring](Images/Health_Monitor_Bull.png)
+
+### Task Management
+
+#### Daily Tasks
+![Daily Tasks](Images/Daily_Tasks.png)
+
+#### Add Tasks
+![Add Tasks](Images/Add_Tasks.png)
+
+#### Schedule Tasks
+![Schedule Tasks](Images/Schedule_Tasks.png)
+
+#### Manage Tasks
+![Manage Tasks](Images/Manage_Tasks.png)
+
+### Inseminaton Cycle Tracking
+
+#### Update Cycle
+![Update Cycle](Images/Update_Cycle.png)
+
+#### History
+![History](Images/History.png)
+
+#### Upcoming Cycle Alert
+![Upcoming Cycle Alert](Images/Upcoming_Cycle_Alert.png)
+
+### Group Management
+
+#### Add Animal
+![Add Animal](Images/Add_Animal.png)
 
 ---
 
@@ -98,7 +149,3 @@ We welcome contributions to AgroNext! Here's how you can contribute:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-
